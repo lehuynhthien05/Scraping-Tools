@@ -71,9 +71,6 @@ public class ScrapeCourseService {
         }
     }
 
-    // ============================================
-    // HEADER
-    // ============================================
     private List<String> extractHeaders(WebDriver driver) {
         List<String> headers = new ArrayList<>();
 
