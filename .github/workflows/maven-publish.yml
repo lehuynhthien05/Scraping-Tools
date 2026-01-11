@@ -5,11 +5,14 @@ name: Scraping-Tools
 
 on:
   push:
-    branches: [main]
+    branches:
+      - '**'          # mọi branch
   pull_request:
-    branches: feature/*
+    branches:
+      - '**'          # mọi PR
   release:
     types: [created]
+
 
 jobs:
   build:
