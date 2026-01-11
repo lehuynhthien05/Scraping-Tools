@@ -16,7 +16,10 @@ public class LoginService {
     public WebDriver login(String username, String password) {
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--disable-blink-features=AutomationControlled");
-        // options.addArguments("--headless=new");
+        String headless = System.getProperty("scraper.headless", System.getenv().getOrDefault("SCRAPER_HEADLESS", "false"));
+        if ("true".equalsIgnoreCase(headless)) {
+            options.addArguments("--headless=new");
+        }
 
         WebDriver driver = new ChromeDriver(options);
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(30));

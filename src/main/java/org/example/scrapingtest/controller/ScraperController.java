@@ -1,5 +1,7 @@
 package org.example.scrapingtest.controller;
 
+import org.example.scrapingtest.model.ClassCode;
+import org.example.scrapingtest.model.SubjectLecturer;
 import org.example.scrapingtest.model.Subjects;
 import org.example.scrapingtest.service.CourseService;
 import org.example.scrapingtest.service.ScrapeCourseService;
@@ -20,7 +22,7 @@ public class ScraperController {
     private final ScrapeCourseService scrapeCourseService;
     private final CourseService subjectService;
 
-    public ScraperController(ScrapeScheduleService scrapeScheduleService, 
+    public ScraperController(ScrapeScheduleService scrapeScheduleService,
                             ScrapeCourseService scrapeCourseService,
                             CourseService subjectService) {
         this.scrapeScheduleService = scrapeScheduleService;
@@ -30,11 +32,6 @@ public class ScraperController {
 
     /**
      * Scrape courses and return as JSON
-     * @param username Username for login
-     * @param password Password for login
-     * @param faculty Faculty code
-     * @return JSON string of course data
-     *
      */
     @GetMapping
     public String scrapeCourses(
@@ -48,24 +45,6 @@ public class ScraperController {
         return gson.toJson(courseData);
     }
 
-    /**
-     * Scrape courses and save to database
-     * @param username Username for login
-     * @param password Password for login
-     * @param faculty Faculty code
-     * @return Number of courses saved
-     */
-    @GetMapping("/save")
-    public ResponseEntity<String> scrapeCoursesSave(
-            @RequestParam String username,
-            @RequestParam String password,
-            @RequestParam String faculty
-    ) {
-        Map<String, List<Map<String, String>>> courseData = scrapeCourseService.scrapeCourses(username, password, faculty);
-        int savedCount = subjectService.convertAndSaveCourseData(courseData);
-
-        return ResponseEntity.ok("Saved " + savedCount + " courses to database");
-    }
 
     @GetMapping("/student")
     public String scrapeByStudentIdParam(
@@ -79,7 +58,6 @@ public class ScraperController {
 
     /**
      * Get all courses from the database
-     * @return List of all courses
      */
     @GetMapping("/courses")
     public ResponseEntity<List<Subjects>> getAllCourses() {
@@ -87,15 +65,57 @@ public class ScraperController {
     }
 
     /**
-     * Save student schedule to database
-     * @param studentId Student ID
-     * @return Number of courses saved
+     * Scrape courses and persist to DB
      */
-    @GetMapping("/student/save")
-    public ResponseEntity<String> saveStudentSchedule(@RequestParam(name = "id") String studentId) {
-        Map<String, List<Map<String, String>>> courseData = scrapeScheduleService.scrapeCoursesByStudentId(studentId);
-        int savedCount = subjectService.convertAndSaveCourseData(courseData);
+    @GetMapping("/save")
+    public ResponseEntity<List<Subjects>> scrapeCoursesAndSave(
+            @RequestParam String username,
+            @RequestParam String password,
+            @RequestParam String faculty
+    ) {
+        Map<String, List<Map<String, String>>> courseData = scrapeCourseService.scrapeCourses(username, password, faculty);
+        List<Subjects> saved = subjectService.saveCourse(courseData);
+        return ResponseEntity.ok(saved);
+    }
 
-        return ResponseEntity.ok("Saved " + savedCount + " courses to database");
+    /**
+     * Return DB mappings as plain text lines: subjectId class_id lecturer_id subjectName
+     */
+    @GetMapping("/db-lines")
+    public ResponseEntity<String> getDbLines() {
+        List<Subjects> subjects = subjectService.getAllCourses();
+        StringBuilder sb = new StringBuilder();
+
+        for (Subjects s : subjects) {
+            List<ClassCode> codes = s.getClassCodes();
+            List<SubjectLecturer> lects = s.getLecturers();
+
+            if ((codes == null || codes.isEmpty()) && (lects == null || lects.isEmpty())) {
+                sb.append(s.getSubjectId()).append(" 0 0 ").append(s.getSubjectName() == null ? "" : s.getSubjectName()).append('\n');
+                continue;
+            }
+
+            if (codes == null || codes.isEmpty()) {
+                for (SubjectLecturer l : lects) {
+                    sb.append(s.getSubjectId()).append(' ').append(0).append(' ').append(l.getId() == null ? 0 : l.getId()).append(' ').append(s.getSubjectName() == null ? "" : s.getSubjectName()).append('\n');
+                }
+                continue;
+            }
+
+            if (lects == null || lects.isEmpty()) {
+                for (ClassCode c : codes) {
+                    sb.append(s.getSubjectId()).append(' ').append(c.getId() == null ? 0 : c.getId()).append(' ').append(0).append(' ').append(s.getSubjectName() == null ? "" : s.getSubjectName()).append('\n');
+                }
+                continue;
+            }
+
+            for (ClassCode c : codes) {
+                for (SubjectLecturer l : lects) {
+                    sb.append(s.getSubjectId()).append(' ').append(c.getId() == null ? 0 : c.getId()).append(' ').append(l.getId() == null ? 0 : l.getId()).append(' ').append(s.getSubjectName() == null ? "" : s.getSubjectName()).append('\n');
+                }
+            }
+        }
+
+        return ResponseEntity.ok(sb.toString());
     }
 }
