@@ -9,40 +9,25 @@ import lombok.NoArgsConstructor;
 import java.util.ArrayList;
 import java.util.List;
 
-@Entity
-@Table(name = "subjects")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
+@Table(name = "subjects")
 public class Subjects {
-
-    @Id
-    @Column(name = "subject_id", nullable = false)
-    private String subjectId;
-
-    @Column(name = "class_code")
-    private String classCode;
-
-    @Column(name = "credits")
-    private int credits;
-
 
     @Column(name = "subject_name")
     private String subjectName;
 
-    @Column(name = "capacity")
-    private int capacity;
-
-    @OneToMany(
-            mappedBy = "subject",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
-    )
+    @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
-    private List<Schedule> schedule = new ArrayList<>();
+    private List<SubjectLecturer> lecturers = new ArrayList<>();
 
-    public void addSchedule(Schedule s) {
-        schedule.add(s);
-        s.setSubject(this);
-    }
+    @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<ClassCode> classCodes = new ArrayList<>();
+
+    @Id
+    @Column(name = "subject_id")
+    private String subjectId;
 }

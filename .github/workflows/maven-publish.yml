@@ -3,26 +3,24 @@ name: Scraping-Tools CI/CD
 on:
   push:
     branches:
-      - '**'          # mọi branch
+      - '**'
   pull_request:
     branches:
-      - '**'          # mọi PR
-  release:
-    types: [created]
+      - main
 
 jobs:
-  build:
-
+  build-and-merge:
     runs-on: ubuntu-latest
+    environment: env
     permissions:
-      contents: read
-      packages: write
+      contents: write          # cần để merge và xoá branch
+      pull-requests: write
 
     services:
       mysql:
         image: mysql:8
         env:
-          MYSQL_ROOT_PASSWORD: root
+          MYSQL_ROOT_PASSWORD: ${{ secrets.DB_PASSWORD }}
           MYSQL_DATABASE: iuassistant
         ports:
           - 3306:3306
@@ -44,20 +42,20 @@ jobs:
           cache: maven
 
       - name: Wait for MySQL to be ready
+        env:
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_USERNAME: ${{secrets.DB_USERNAME }}
         run: |
           echo "Waiting for MySQL..."
-          until mysqladmin ping -h 127.0.0.1 -uroot -proot > /dev/null 2>&1; do
+          until mysqladmin ping -h 127.0.0.1 -u $DB_USERNAME -p$DB_PASSWORD > /dev/null 2>&1; do
             sleep 2
           done
           echo "MySQL is ready!"
+      
+      
 
       - name: Build and Run Tests
         run: mvn clean verify -Dspring.profiles.active=prod
 
       - name: Package Application
         run: mvn clean package -DskipTests
-
-#      - name: Deploy to GitHub Packages
-#        run: mvn deploy -s $GITHUB_WORKSPACE/settings.xml
-#        env:
-#          GITHUB_TOKEN: ${{ github.token }}
