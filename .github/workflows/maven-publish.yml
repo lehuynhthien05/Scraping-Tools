@@ -52,7 +52,7 @@ jobs:
           echo "MySQL is ready!"
 
       - name: Build and Run Tests
-        run: mvn clean verify -Dspring.profiles.active=test
+        run: mvn clean verify -Dspring.profiles.active=prod
 
       - name: Package Application
         run: mvn clean package -DskipTests
