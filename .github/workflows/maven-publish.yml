@@ -3,10 +3,10 @@ name: Scraping-Tools CI/CD
 on:
   push:
     branches:
-      - 'main'          # mọi branch
+      - '**'          # mọi branch
   pull_request:
     branches:
-      - '**'          # mọi PR
+      - 'main'          # mọi PR
   release:
     types: [created]
 
