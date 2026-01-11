@@ -34,6 +34,7 @@ public class ScraperController {
      * @param password Password for login
      * @param faculty Faculty code
      * @return JSON string of course data
+     *
      */
     @GetMapping
     public String scrapeCourses(
