@@ -41,13 +41,17 @@ jobs:
           cache: maven
 
       - name: Wait for MySQL to be ready
+        env:
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_USERNAME: ${{secrets.DB_USERNAME }}
         run: |
           echo "Waiting for MySQL..."
-          until mysqladmin ping -h 127.0.0.1 -p${{ secrets.DB_USERNAME }} -p${{ secrets.DB_PASSWORD }} > /dev/null 2>&1; do
+          until mysqladmin ping -h 127.0.0.1 -u $DB_USERNAME -p$DB_PASSWORD > /dev/null 2>&1; do
             sleep 2
           done
           echo "MySQL is ready!"
-
+      
+      
 
       - name: Build and Run Tests
         run: mvn clean verify -Dspring.profiles.active=prod
