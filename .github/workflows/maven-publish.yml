@@ -1,9 +1,12 @@
 name: Scraping-Tools CI/CD
 
 on:
+  push:
+    branches:
+      - '**'
   pull_request:
     branches:
-      - main  # chỉ PR target main
+      - main
 
 jobs:
   build-and-merge:
