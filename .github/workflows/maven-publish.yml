@@ -57,6 +57,11 @@ jobs:
       - name: Package Application
         run: mvn clean package -DskipTests
 
+      - name: Auto merge PR
+        uses: peter-evans/merge-pull-requests@v3
+        with:
+          merge-method: squash
+
 #      - name: Deploy to GitHub Packages
 #        run: mvn deploy -s $GITHUB_WORKSPACE/settings.xml
 #        env:
