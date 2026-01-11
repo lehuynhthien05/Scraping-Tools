@@ -19,7 +19,7 @@ jobs:
       mysql:
         image: mysql:8
         env:
-          MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+          MYSQL_ROOT_PASSWORD: root
           MYSQL_DATABASE: iuassistant
         ports:
           - 3306:3306
