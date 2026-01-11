@@ -3,7 +3,7 @@ name: Scraping-Tools CI/CD
 on:
   push:
     branches:
-      - '**'          # mọi branch
+      - 'main'          # mọi branch
   pull_request:
     branches:
       - '**'          # mọi PR
