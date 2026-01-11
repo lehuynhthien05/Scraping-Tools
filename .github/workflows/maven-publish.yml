@@ -64,5 +64,4 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh auth setup-git
-          gh pr merge ${{ github.event.pull_request.number }} --merge --auto --admin
+          gh pr merge ${{ github.event.pull_request.number }} --merge --auto --delete-branch
