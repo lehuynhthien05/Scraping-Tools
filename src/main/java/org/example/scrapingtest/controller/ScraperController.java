@@ -1,7 +1,5 @@
 package org.example.scrapingtest.controller;
 
-import org.example.scrapingtest.model.ClassCode;
-import org.example.scrapingtest.model.SubjectLecturer;
 import org.example.scrapingtest.model.Subjects;
 import org.example.scrapingtest.service.CourseService;
 import org.example.scrapingtest.service.ScrapeCourseService;
@@ -76,46 +74,5 @@ public class ScraperController {
         Map<String, List<Map<String, String>>> courseData = scrapeCourseService.scrapeCourses(username, password, faculty);
         List<Subjects> saved = subjectService.saveCourse(courseData);
         return ResponseEntity.ok(saved);
-    }
-
-    /**
-     * Return DB mappings as plain text lines: subjectId class_id lecturer_id subjectName
-     */
-    @GetMapping("/db-lines")
-    public ResponseEntity<String> getDbLines() {
-        List<Subjects> subjects = subjectService.getAllCourses();
-        StringBuilder sb = new StringBuilder();
-
-        for (Subjects s : subjects) {
-            List<ClassCode> codes = s.getClassCodes();
-            List<SubjectLecturer> lects = s.getLecturers();
-
-            if ((codes == null || codes.isEmpty()) && (lects == null || lects.isEmpty())) {
-                sb.append(s.getSubjectId()).append(" 0 0 ").append(s.getSubjectName() == null ? "" : s.getSubjectName()).append('\n');
-                continue;
-            }
-
-            if (codes == null || codes.isEmpty()) {
-                for (SubjectLecturer l : lects) {
-                    sb.append(s.getSubjectId()).append(' ').append(0).append(' ').append(l.getId() == null ? 0 : l.getId()).append(' ').append(s.getSubjectName() == null ? "" : s.getSubjectName()).append('\n');
-                }
-                continue;
-            }
-
-            if (lects == null || lects.isEmpty()) {
-                for (ClassCode c : codes) {
-                    sb.append(s.getSubjectId()).append(' ').append(c.getId() == null ? 0 : c.getId()).append(' ').append(0).append(' ').append(s.getSubjectName() == null ? "" : s.getSubjectName()).append('\n');
-                }
-                continue;
-            }
-
-            for (ClassCode c : codes) {
-                for (SubjectLecturer l : lects) {
-                    sb.append(s.getSubjectId()).append(' ').append(c.getId() == null ? 0 : c.getId()).append(' ').append(l.getId() == null ? 0 : l.getId()).append(' ').append(s.getSubjectName() == null ? "" : s.getSubjectName()).append('\n');
-                }
-            }
-        }
-
-        return ResponseEntity.ok(sb.toString());
     }
 }

@@ -16,18 +16,18 @@ import java.util.List;
 @Table(name = "subjects")
 public class Subjects {
 
+    @Id
+    @Column(name = "subject_id")
+    private String subjectId;
+
     @Column(name = "subject_name")
     private String subjectName;
 
     @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
-    private List<SubjectLecturer> lecturers = new ArrayList<>();
+    private List<ClassCode> classCodes = new ArrayList<>();
 
     @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
-    private List<ClassCode> classCodes = new ArrayList<>();
-
-    @Id
-    @Column(name = "subject_id")
-    private String subjectId;
+    private List<SubjectLecturer> lecturers = new ArrayList<>();
 }
