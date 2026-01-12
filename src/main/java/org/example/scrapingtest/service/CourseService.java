@@ -33,7 +33,6 @@ public class CourseService {
         return courseRepository.findAll();
     }
 
-    // Group rows into Subjects and persist them to DB (merge with existing records)
     public List<Subjects> saveCourse(Map<String, List<Map<String, String>>> courseData) {
         class Temp {
             String subjectName;
@@ -60,7 +59,7 @@ public class CourseService {
 
                 // collect codes
                 List<String> codes = parseCodes(classCodeRaw);
-                for (String c : codes) t.codes.add(c);
+                t.codes.addAll(codes);
 
                 // collect lecturers
                 if (!lecturerRaw.isEmpty()) {
@@ -71,14 +70,12 @@ public class CourseService {
                     }
                 }
 
-                // update subjectName if empty
                 if ((t.subjectName == null || t.subjectName.isEmpty()) && !subjectName.isEmpty()) {
                     t.subjectName = subjectName;
                 }
             }
         }
 
-        // Fetch existing subjects from DB
         Set<String> ids = new HashSet<>(tempMap.keySet());
         Map<String, Subjects> existingMap = new HashMap<>();
         if (!ids.isEmpty()) {
@@ -88,7 +85,6 @@ public class CourseService {
 
         List<Subjects> toSave = new ArrayList<>();
 
-        // Build Subjects entities with many-to-many associations
         for (Map.Entry<String, Temp> ent : tempMap.entrySet()) {
             String id = ent.getKey();
             Temp t = ent.getValue();
@@ -100,44 +96,69 @@ public class CourseService {
             if (subject.getClassCodes() == null) subject.setClassCodes(new ArrayList<>());
             if (subject.getLecturers() == null) subject.setLecturers(new ArrayList<>());
 
-            // Ensure ClassCode and SubjectLecturer entities exist (or create) and add to subject lists
+            // merge/add class codes as child entities
             for (String code : t.codes) {
                 List<ClassCode> matches = classCodeRepository.findByClassCode(code);
                 ClassCode cc;
                 if (!matches.isEmpty()) {
-                    // prefer one already linked to this subject
-                    cc = matches.stream().filter(m -> subject.getClassCodes().stream().anyMatch(x -> Objects.equals(x.getId(), m.getId()))).findFirst().orElse(matches.get(0));
+                    cc = matches.get(0);
+                    // reassign subject if needed
+                    if (cc.getSubject() == null || !Objects.equals(cc.getSubject().getSubjectId(), subject.getSubjectId())) {
+                        cc.setSubject(subject);
+                    }
                 } else {
-                    ClassCode n = new ClassCode();
-                    n.setClassCode(code);
-                    cc = classCodeRepository.save(n);
+                    cc = new ClassCode();
+                    cc.setClassCode(code);
+                    cc.setSubject(subject);
+                    // do not save now; will be cascaded when saving subject
                 }
-                boolean present = subject.getClassCodes().stream().anyMatch(x -> Objects.equals(x.getId(), cc.getId()) || Objects.equals(x.getClassCode(), cc.getClassCode()));
-                if (!present) subject.getClassCodes().add(cc);
+
+                boolean present = false;
+                for (ClassCode x : subject.getClassCodes()) {
+                    if (Objects.equals(x.getId(), cc.getId()) || Objects.equals(x.getClassCode(), cc.getClassCode())) {
+                        present = true;
+                        break;
+                    }
+                }
+                if (!present) {
+                    subject.getClassCodes().add(cc);
+                }
             }
 
+            // merge/add lecturers as child entities
             for (String lec : t.lecturers) {
                 List<SubjectLecturer> matches = subjectLecturerRepository.findByLecturer(lec);
                 SubjectLecturer sl;
                 if (!matches.isEmpty()) {
-                    sl = matches.stream().filter(m -> subject.getLecturers().stream().anyMatch(x -> Objects.equals(x.getId(), m.getId()))).findFirst().orElse(matches.get(0));
+                    sl = matches.get(0);
+                    if (sl.getSubject() == null || !Objects.equals(sl.getSubject().getSubjectId(), subject.getSubjectId())) {
+                        sl.setSubject(subject);
+                    }
                 } else {
-                    SubjectLecturer n = new SubjectLecturer();
-                    n.setLecturer(lec);
-                    sl = subjectLecturerRepository.save(n);
+                    sl = new SubjectLecturer();
+                    sl.setLecturer(lec);
+                    sl.setSubject(subject);
+                    // do not save now; will be cascaded
                 }
-                boolean present = subject.getLecturers().stream().anyMatch(x -> Objects.equals(x.getId(), sl.getId()) || Objects.equals(x.getLecturer(), sl.getLecturer()));
-                if (!present) subject.getLecturers().add(sl);
+
+                boolean present = false;
+                for (SubjectLecturer x : subject.getLecturers()) {
+                    if (Objects.equals(x.getId(), sl.getId()) || Objects.equals(x.getLecturer(), sl.getLecturer())) {
+                        present = true;
+                        break;
+                    }
+                }
+                if (!present) {
+                    subject.getLecturers().add(sl);
+                }
             }
 
             toSave.add(subject);
         }
 
-        // persist to DB (insert new and update existing), relationships saved via join tables
         return courseRepository.saveAll(toSave);
     }
 
-    // parse class codes or similar cell into list by splitting on newline, comma, or semicolon
     private List<String> parseCodes(String raw) {
         List<String> out = new ArrayList<>();
         if (raw == null || raw.trim().isEmpty()) return out;

@@ -17,7 +17,7 @@ public class ScrapeScheduleService {
     public Map<String, List<Map<String, String>>> scrapeCoursesByStudentId(String studentId) {
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--disable-blink-features=AutomationControlled");
-        // options.addArguments("--headless=new");
+        options.addArguments("--headless");
 
         WebDriver driver = new ChromeDriver(options);
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(30));
