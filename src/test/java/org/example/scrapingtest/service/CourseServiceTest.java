@@ -52,6 +52,8 @@ class CourseServiceTest {
         ArgumentCaptor<List<Subjects>> captor = ArgumentCaptor.forClass((Class) List.class);
         when(courseRepository.saveAll(anyList())).thenAnswer(invocation -> invocation.getArgument(0));
 
+        // Call the service under test so repository interactions occur
+        List<Subjects> saved = courseService.saveCourse(courseData);
 
         verify(classCodeRepository, times(0)).save(any(ClassCode.class)); // saved via cascade
         verify(subjectLecturerRepository, times(0)).save(any(SubjectLecturer.class));
@@ -111,4 +113,3 @@ class CourseServiceTest {
         assertThat(s.getLecturers().stream().map(SubjectLecturer::getLecturer)).contains("EXISTING_LEC", "NEW_LEC");
     }
 }
-
