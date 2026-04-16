@@ -43,6 +43,11 @@ public class ScraperController {
         return gson.toJson(courseData);
     }
 
+    @GetMapping("/hello")
+    public String HelloWorld() {
+        return "Hello World";
+    }
+
 
     @GetMapping("/student")
     public String scrapeByStudentIdParam(
